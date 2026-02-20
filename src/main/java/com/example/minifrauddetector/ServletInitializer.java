@@ -1,4 +1,4 @@
-package com.example.mini_fraud_detector;
+package com.example.minifrauddetector;
 
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
