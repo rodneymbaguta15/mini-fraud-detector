@@ -1,5 +1,7 @@
 package com.example.minifrauddetector.controller;
 
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -60,5 +62,41 @@ class FraudControllerTest {
             .andExpect(jsonPath("$.riskLevel").value("MEDIUM"))
             .andExpect(jsonPath("$.reasons").isArray())
             .andExpect(jsonPath("$.evaluatedAt").exists());
+    }
+
+    @Test
+    void shouldReturnBadRequestWithFieldErrorsForInvalidPayload() throws Exception {
+        mockMvc.perform(post("/api/v1/fraud/check")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "transactionId": "tx-123",
+                      "userId": "user-1",
+                      "amount": -1,
+                      "currency": "USD",
+                      "country": "US",
+                      "deviceTrusted": false
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Validation failed"))
+            .andExpect(jsonPath("$.path").value("/api/v1/fraud/check"))
+            .andExpect(jsonPath("$.fieldErrors", hasSize(2)))
+            .andExpect(jsonPath("$.fieldErrors[*].field", hasItem("amount")))
+            .andExpect(jsonPath("$.fieldErrors[*].field", hasItem("timestamp")));
+    }
+
+    @Test
+    void shouldReturnBadRequestForMalformedJson() throws Exception {
+        mockMvc.perform(post("/api/v1/fraud/check")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "transactionId": "tx-123",
+                      "userId": "user-1",
+                      "amount": 50.0,
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Malformed JSON request"));
     }
 }
