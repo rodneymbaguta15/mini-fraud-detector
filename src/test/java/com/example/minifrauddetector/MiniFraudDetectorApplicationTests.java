@@ -1,4 +1,4 @@
-package com.example.mini_fraud_detector;
+package com.example.minifrauddetector;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
