@@ -1,3 +1,9 @@
 server:
   port: 8080
   address: 0.0.0.0
+
+fraud:
+  high-risk-countries: ["MM", "GH", "KE", "ZA", "BR", "CY"]
+  night-window:
+    start-hour-utc: 0
+    end-hour-utc: 5
