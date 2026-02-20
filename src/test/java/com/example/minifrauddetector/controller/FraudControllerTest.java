@@ -4,10 +4,12 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.example.minifrauddetector.config.FraudRulesProperties;
 import com.example.minifrauddetector.dto.FraudCheckResponse;
 import com.example.minifrauddetector.dto.RiskLevel;
 import com.example.minifrauddetector.service.FraudScoringService;
@@ -28,6 +30,9 @@ class FraudControllerTest {
 
     @MockBean
     private FraudScoringService fraudScoringService;
+
+    @MockBean
+    private FraudRulesProperties fraudRulesProperties;
 
     @Test
     void shouldReturnFraudCheckResponseForValidRequest() throws Exception {
@@ -62,6 +67,23 @@ class FraudControllerTest {
             .andExpect(jsonPath("$.riskLevel").value("MEDIUM"))
             .andExpect(jsonPath("$.reasons").isArray())
             .andExpect(jsonPath("$.evaluatedAt").exists());
+    }
+
+    @Test
+    void shouldReturnRulesResponse() throws Exception {
+        FraudRulesProperties.NightWindow nightWindow = new FraudRulesProperties.NightWindow();
+        nightWindow.setStartHourUtc(0);
+        nightWindow.setEndHourUtc(5);
+
+        when(fraudRulesProperties.getHighRiskCountries()).thenReturn(List.of("MM", "GH"));
+        when(fraudRulesProperties.getNightWindow()).thenReturn(nightWindow);
+
+        mockMvc.perform(get("/api/v1/fraud/rules"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.highRiskCountries", hasItem("MM")))
+            .andExpect(jsonPath("$.riskBands.LOW").value("0-29"))
+            .andExpect(jsonPath("$.riskBands.MEDIUM").value("30-69"))
+            .andExpect(jsonPath("$.riskBands.HIGH").value("70-100"));
     }
 
     @Test
